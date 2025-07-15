@@ -3,16 +3,6 @@
     <div class="main-content">
       <div class="game-header">
         <h1>中国象棋</h1>
-        <div class="current-player">
-          当前玩家: <span :class="currentPlayerClass">{{ currentPlayerText }}</span>
-        </div>
-        <div v-if="gameState.isInCheck" class="check-warning">
-          <span :class="currentPlayerClass">{{ currentPlayerText }}</span> 被将军！
-        </div>
-        <div v-if="gameOver" class="game-over">
-          <h3>游戏结束!</h3>
-          <p>{{ winnerText }}</p>
-        </div>
       </div>
       
       <div class="board-container">
@@ -106,6 +96,26 @@
 
     <!-- 右侧控制面板 -->
     <div class="control-panel">
+      <!-- 当前玩家信息 -->
+      <div class="current-player" :class="currentPlayerClass">
+        <div class="player-info">
+          当前玩家: {{ currentPlayerText }}
+        </div>
+        <div class="action-buttons">
+          <button @click="resetGame" class="action-btn reset-btn">重新开始</button>
+          <button @click="undoMove" class="action-btn undo-btn" :disabled="!canUndo">悔棋</button>
+        </div>
+      </div>
+      
+      <div v-if="gameState.isInCheck" class="check-warning">
+        将军！
+      </div>
+      
+      <div v-if="gameOver" class="game-over">
+        <h3>游戏结束</h3>
+        <p>{{ winnerText }}</p>
+      </div>
+      
       <!-- 游戏统计面板 -->
       <div class="stats-panel">
         <h3>游戏统计</h3>
@@ -146,12 +156,6 @@
             </span>
           </div>
         </div>
-      </div>
-
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <button @click="resetGame" class="action-btn reset-btn">重新开始</button>
-        <button @click="undoMove" class="action-btn undo-btn" :disabled="!canUndo">悔棋</button>
       </div>
     </div>
   </div>
@@ -354,58 +358,21 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 540px;
 }
 
 .game-header {
   text-align: center;
   margin-bottom: 20px;
+  width: 100%;
 }
 
 .game-header h1 {
   color: #8B4513;
-  margin-bottom: 10px;
   font-size: 32px;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-}
-
-.current-player {
-  font-size: 20px;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-.red-player {
-  color: #DC143C;
-  font-weight: bold;
-}
-
-.black-player {
-  color: #000;
-  font-weight: bold;
-}
-
-.check-warning {
-  color: #DC143C;
-  font-weight: bold;
-  font-size: 20px;
-  margin: 10px 0;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-.game-over {
-  margin-top: 20px;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin: 0;
 }
 
 .board-container {
@@ -545,9 +512,68 @@ onMounted(() => {
 /* 右侧控制面板 */
 .control-panel {
   width: 300px;
+  height: 600px;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  justify-content: flex-start;
+}
+
+.current-player {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
+}
+
+.player-info {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.current-player.red-player .player-info {
+  color: #DC143C;
+}
+
+.current-player.black-player .player-info {
+  color: #000;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center;
+}
+
+.check-warning {
+  color: #FF4500;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+  text-align: center;
+  padding: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 12px;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.game-over {
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
 }
 
 .stats-panel {
@@ -591,9 +617,9 @@ onMounted(() => {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  height: 250px;
+  flex: 1;
   overflow-y: auto;
-  flex-shrink: 0;
+  min-height: 250px;
 }
 
 .move-log h3 {
@@ -609,12 +635,16 @@ onMounted(() => {
 .log-entries {
   font-size: 13px;
   line-height: 1.5;
+  text-align: left;
 }
 
 .log-entry {
-  padding: 5px 0;
+  padding: 5px 8px;
   color: #4b5563;
   border-bottom: 1px solid #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .log-entry:last-child {
@@ -631,25 +661,20 @@ onMounted(() => {
   color: #111827;
 }
 
-.action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  order: -1;
-  margin-bottom: 10px;
-}
+
 
 .action-btn {
   background: #8B4513;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  min-width: 80px;
 }
 
 .action-btn:hover:not(:disabled) {
