@@ -1,109 +1,159 @@
 <template>
   <div class="chess-container">
-    <div class="game-info">
-      <h2>中国象棋</h2>
-      <div class="current-player">
-        当前玩家: <span :class="currentPlayerClass">{{ currentPlayerText }}</span>
-      </div>
-      <div v-if="gameState.isInCheck" class="check-warning">
-        <span :class="currentPlayerClass">{{ currentPlayerText }}</span> 被将军！
-      </div>
-      <div v-if="gameOver" class="game-over">
-        <h3>游戏结束!</h3>
-        <p>{{ winnerText }}</p>
-        <button @click="resetGame" class="reset-btn">重新开始</button>
-      </div>
-    </div>
-    
-    <div class="board-container">
-      <div class="chess-board">
-        <!-- 棋盘网格线 - 修正绘制 -->
-        <svg class="board-lines" width="540" height="600">
-          <!-- 水平线 - 完整10条 -->
-          <line v-for="i in 10" :key="`h-${i}`" 
-                :x1="30" :y1="(i-1) * 60 + 30" 
-                :x2="510" :y2="(i-1) * 60 + 30" 
-                stroke="#8B4513" stroke-width="2"/>
-          
-          <!-- 垂直线 - 跳过楚河汉界行 -->
-          <line v-for="i in 9" :key="`v-${i}`" 
-                :x1="(i-1) * 60 + 30" :y1="30" 
-                :x2="(i-1) * 60 + 30" :y2="270" 
-                stroke="#8B4513" stroke-width="2"/>
-          <line v-for="i in 9" :key="`v-river-${i}`" 
-                :x1="(i-1) * 60 + 30" :y1="330" 
-                :x2="(i-1) * 60 + 30" :y2="570" 
-                stroke="#8B4513" stroke-width="2"/>
-          
-          <!-- 九宫格斜线 - 上方将帅区域（3-5列，0-2行） -->
-          <line x1="210" y1="30" x2="330" y2="150" stroke="#8B4513" stroke-width="2"/>
-          <line x1="330" y1="30" x2="210" y2="150" stroke="#8B4513" stroke-width="2"/>
-          
-          <!-- 九宫格斜线 - 下方将帅区域（3-5列，7-9行） -->
-          <line x1="210" y1="450" x2="330" y2="570" stroke="#8B4513" stroke-width="2"/>
-          <line x1="330" y1="450" x2="210" y2="570" stroke="#8B4513" stroke-width="2"/>
-        </svg>
-
-        <!-- 楚河汉界 - 重新定位 -->
-        <div class="river-container">
-          <div class="river-text">楚河汉界</div>
+    <div class="main-content">
+      <div class="game-header">
+        <h1>中国象棋</h1>
+        <div class="current-player">
+          当前玩家: <span :class="currentPlayerClass">{{ currentPlayerText }}</span>
         </div>
+        <div v-if="gameState.isInCheck" class="check-warning">
+          <span :class="currentPlayerClass">{{ currentPlayerText }}</span> 被将军！
+        </div>
+        <div v-if="gameOver" class="game-over">
+          <h3>游戏结束!</h3>
+          <p>{{ winnerText }}</p>
+        </div>
+      </div>
+      
+      <div class="board-container">
+        <div class="chess-board">
+          <!-- 棋盘网格线 - 修正绘制 -->
+          <svg class="board-lines" width="540" height="600">
+            <!-- 水平线 - 完整10条 -->
+            <line v-for="i in 10" :key="`h-${i}`" 
+                  :x1="30" :y1="(i-1) * 60 + 30" 
+                  :x2="510" :y2="(i-1) * 60 + 30" 
+                  stroke="#8B4513" stroke-width="2"/>
+            
+            <!-- 垂直线 - 跳过楚河汉界行 -->
+            <line v-for="i in 9" :key="`v-${i}`" 
+                  :x1="(i-1) * 60 + 30" :y1="30" 
+                  :x2="(i-1) * 60 + 30" :y2="270" 
+                  stroke="#8B4513" stroke-width="2"/>
+            <line v-for="i in 9" :key="`v-river-${i}`" 
+                  :x1="(i-1) * 60 + 30" :y1="330" 
+                  :x2="(i-1) * 60 + 30" :y2="570" 
+                  stroke="#8B4513" stroke-width="2"/>
+            
+            <!-- 九宫格斜线 - 上方将帅区域（3-5列，0-2行） -->
+            <line x1="210" y1="30" x2="330" y2="150" stroke="#8B4513" stroke-width="2"/>
+            <line x1="330" y1="30" x2="210" y2="150" stroke="#8B4513" stroke-width="2"/>
+            
+            <!-- 九宫格斜线 - 下方将帅区域（3-5列，7-9行） -->
+            <line x1="210" y1="450" x2="330" y2="570" stroke="#8B4513" stroke-width="2"/>
+            <line x1="330" y1="450" x2="210" y2="570" stroke="#8B4513" stroke-width="2"/>
+          </svg>
 
-        <!-- 棋子 - 重新定位到交叉点 -->
-        <div class="pieces-layer">
-          <div 
-            v-for="piece in allPieces" 
-            :key="piece.id"
-            class="chess-piece"
-            :class="piece.player"
-            :style="{ 
-              left: piece.position.x * 60 + 30 - 25 + 'px', 
-              top: piece.position.y * 60 + 30 - 25 + 'px'
-            }"
-            :data-selected="isSelected(piece.position.x, piece.position.y)"
-            @click="handlePieceClick(piece.position.x, piece.position.y)"
-          >
-            {{ getPieceSymbol(piece.type, piece.player) }}
+          <!-- 楚河汉界 - 优化显示 -->
+          <div class="river-container">
+            <div class="river-text river-left">楚河</div>
+            <div class="river-text river-right">汉界</div>
           </div>
-        </div>
 
-        <!-- 可选移动标记 -->
-        <div class="valid-moves-layer">
-          <div 
-            v-for="move in gameState.validMoves" 
-            :key="`${move.x}-${move.y}`"
-            class="valid-move-dot"
-            :style="{ 
-              left: move.x * 60 + 30 - 10 + 'px', 
-              top: move.y * 60 + 30 - 10 + 'px'
-            }"
-            @click="handleMoveClick(move.x, move.y)"
-          ></div>
-        </div>
-
-        <!-- 点击区域 - 覆盖整个棋盘 -->
-        <div class="click-areas">
-          <div 
-            v-for="y in 10" 
-            :key="y"
-            class="click-row"
-          >
+          <!-- 棋子 - 重新定位到交叉点 -->
+          <div class="pieces-layer">
             <div 
-              v-for="x in 9" 
-              :key="x"
-              class="click-area"
+              v-for="piece in allPieces" 
+              :key="piece.id"
+              class="chess-piece"
+              :class="piece.player"
               :style="{ 
-                left: (x-1) * 60 + 30 - 30 + 'px', 
-                top: (y-1) * 60 + 30 - 30 + 'px' 
+                left: piece.position.x * 60 + 30 - 25 + 'px', 
+                top: piece.position.y * 60 + 30 - 25 + 'px'
               }"
-              @click="handleCellClick(x-1, y-1)"
+              :data-selected="isSelected(piece.position.x, piece.position.y)"
+              @click="handlePieceClick(piece.position.x, piece.position.y)"
+            >
+              {{ getPieceSymbol(piece.type, piece.player) }}
+            </div>
+          </div>
+
+          <!-- 可选移动标记 -->
+          <div class="valid-moves-layer">
+            <div 
+              v-for="move in gameState.validMoves" :key="`${move.x}-${move.y}`"
+              class="valid-move-dot"
+              :style="{ 
+                left: move.x * 60 + 30 - 10 + 'px', 
+                top: move.y * 60 + 30 - 10 + 'px'
+              }"
+              @click="handleMoveClick(move.x, move.y)"
             ></div>
           </div>
+
+          <!-- 点击区域 - 覆盖整个棋盘 -->
+          <div class="click-areas">
+            <div 
+              v-for="y in 10" 
+              :key="y"
+              class="click-row"
+            >
+              <div 
+                v-for="x in 9" 
+                :key="x"
+                class="click-area"
+                :style="{ 
+                  left: (x-1) * 60 + 30 - 30 + 'px', 
+                  top: (y-1) * 60 + 30 - 30 + 'px' 
+                }"
+                @click="handleCellClick(x-1, y-1)"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <button v-if="!gameOver" class="reset-btn" @click="resetGame">重新开始</button>
+    <!-- 右侧控制面板 -->
+    <div class="control-panel">
+      <!-- 游戏统计面板 -->
+      <div class="stats-panel">
+        <h3>游戏统计</h3>
+        <div class="stat-item">
+          <span>总步数:</span>
+          <span>{{ gameStats.totalMoves }}</span>
+        </div>
+        <div class="stat-item">
+          <span>红方步数:</span>
+          <span>{{ gameStats.redMoves }}</span>
+        </div>
+        <div class="stat-item">
+          <span>黑方步数:</span>
+          <span>{{ gameStats.blackMoves }}</span>
+        </div>
+        <div class="stat-item">
+          <span>红方吃子:</span>
+          <span>{{ gameStats.captures.red }}</span>
+        </div>
+        <div class="stat-item">
+          <span>黑方吃子:</span>
+          <span>{{ gameStats.captures.black }}</span>
+        </div>
+        <div class="stat-item">
+          <span>游戏时长:</span>
+          <span>{{ formatDuration(gameStats.gameDuration || currentDuration) }}</span>
+        </div>
+      </div>
+      
+      <!-- 移动日志 -->
+      <div class="move-log">
+        <h3>最近移动</h3>
+        <div class="log-entries">
+          <div v-for="(move, index) in recentMoves" :key="index" class="log-entry">
+            <span class="move-number">{{ move.moveNumber }}.</span>
+            <span class="move-piece">
+              {{ formatMove(move) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <button @click="resetGame" class="action-btn reset-btn">重新开始</button>
+        <button @click="undoMove" class="action-btn undo-btn" :disabled="!canUndo">悔棋</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -112,9 +162,13 @@ import { computed, ref, onMounted } from 'vue';
 import { ChessGame } from '../services/ChessGame';
 import { Player } from '../types/chess';
 import type { Position } from '../types/chess';
+import type { MoveRecord } from '../services/GameStats';
 
 const game = ref(new ChessGame());
 const gameState = ref(game.value.getGameState());
+const gameStats = ref(game.value.getStats());
+const currentDuration = ref(game.value.getCurrentDuration());
+const recentMoves = ref<MoveRecord[]>([]);
 
 const board = computed(() => gameState.value.board);
 const currentPlayer = computed(() => gameState.value.currentPlayer);
@@ -219,6 +273,42 @@ function handleMoveClick(x: number, y: number) {
 
 function updateGameState() {
   gameState.value = game.value.getGameState();
+  updateStats();
+}
+
+function updateStats() {
+  gameStats.value = game.value.getStats();
+  currentDuration.value = game.value.getCurrentDuration();
+  recentMoves.value = game.value.getMoveHistory().slice(-5);
+}
+
+function formatDuration(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes % 60).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  }
+  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+function formatMove(move: MoveRecord): string {
+  const pieceMap: Record<string, string> = {
+    'k': '将',
+    'a': '士',
+    'e': '象',
+    'h': '马',
+    'r': '车',
+    'c': '炮',
+    'p': '兵'
+  };
+  
+  const pieceType = move.pieceType;
+  const pieceName = pieceMap[pieceType] || pieceType;
+  const playerName = move.player === 'red' ? '红' : '黑';
+  
+  return `${playerName}${pieceName} ${move.from.x},${move.from.y}→${move.to.x},${move.to.y}`;
 }
 
 function resetGame() {
@@ -226,33 +316,63 @@ function resetGame() {
   updateGameState();
 }
 
+function undoMove() {
+  if (game.value.canUndo()) {
+    game.value.undoMove();
+    updateGameState();
+  }
+}
+
+const canUndo = computed(() => game.value.canUndo());
+
 onMounted(() => {
   updateGameState();
+  
+  // 定时更新游戏时长
+  setInterval(() => {
+    if (!gameOver.value) {
+      currentDuration.value = game.value.getCurrentDuration();
+    }
+  }, 1000);
 });
 </script>
 
 <style scoped>
 .chess-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
   padding: 20px;
   font-family: 'Microsoft YaHei', sans-serif;
+  gap: 30px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-.game-info {
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-header {
   text-align: center;
   margin-bottom: 20px;
 }
 
-.game-info h2 {
+.game-header h1 {
   color: #8B4513;
   margin-bottom: 10px;
+  font-size: 32px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 .current-player {
-  font-size: 18px;
+  font-size: 20px;
   margin-bottom: 10px;
+  font-weight: bold;
 }
 
 .red-player {
@@ -265,32 +385,10 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.game-over {
-  margin-top: 20px;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.reset-btn {
-  background: #8B4513;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.reset-btn:hover {
-  background: #A0522D;
-}
-
 .check-warning {
   color: #DC143C;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 20px;
   margin: 10px 0;
   animation: pulse 1s infinite;
 }
@@ -299,6 +397,15 @@ onMounted(() => {
   0% { opacity: 1; }
   50% { opacity: 0.5; }
   100% { opacity: 1; }
+}
+
+.game-over {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .board-container {
@@ -310,9 +417,10 @@ onMounted(() => {
   position: relative;
   width: 540px;
   height: 600px;
-  border: 3px solid #8B4513;
+  border: 4px solid #8B4513;
   background: #DEB887;
-  margin: 20px;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
 .board-lines {
@@ -326,25 +434,31 @@ onMounted(() => {
 
 .river-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 240px;
+  top: calc(50% - 30px);
+  left: 0;
+  right: 0;
   height: 60px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
   pointer-events: none;
-  background: transparent;
+  padding: 0 20px;
 }
 
 .river-text {
   font-size: 24px;
   color: #8B4513;
   font-weight: bold;
-  letter-spacing: 8px;
-  writing-mode: vertical-rl;
-  text-orientation: upright;
+  letter-spacing: 3px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.river-left {
+  margin-left: 50px;
+}
+
+.river-right {
+  margin-right: 50px;
 }
 
 .pieces-layer {
@@ -428,6 +542,136 @@ onMounted(() => {
   height: 100%;
 }
 
+/* 右侧控制面板 */
+.control-panel {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stats-panel {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stats-panel h3 {
+  color: #374151;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #8B4513;
+  padding-bottom: 8px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  padding: 5px 0;
+}
+
+.stat-item span:first-child {
+  color: #6b7280;
+}
+
+.stat-item span:last-child {
+  color: #111827;
+  font-weight: bold;
+}
+
+.move-log {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  height: 250px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.move-log h3 {
+  color: #374151;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #8B4513;
+  padding-bottom: 8px;
+}
+
+.log-entries {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.log-entry {
+  padding: 5px 0;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry .move-number {
+  color: #6b7280;
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.log-entry .move-piece {
+  color: #111827;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  order: -1;
+  margin-bottom: 10px;
+}
+
+.action-btn {
+  background: #8B4513;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #A0522D;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.action-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.undo-btn {
+  background: #059669;
+}
+
+.undo-btn:hover:not(:disabled) {
+  background: #047857;
+}
+
 .click-area {
   position: absolute;
   width: 60px;
@@ -436,5 +680,33 @@ onMounted(() => {
   opacity: 0;
   border: none;
   background: transparent;
+}
+
+@media (max-width: 1024px) {
+  .chess-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .control-panel {
+    width: 100%;
+    max-width: 540px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .stats-panel,
+  .move-log {
+    flex: 1;
+    min-width: 250px;
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+  }
 }
 </style>

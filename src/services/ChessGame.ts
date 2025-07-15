@@ -1,8 +1,11 @@
 import type { ChessPiece, Position, GameState } from '../types/chess';
 import { PieceType, Player } from '../types/chess';
+import { GameStatsService } from './GameStats';
 
 export class ChessGame {
   private gameState: GameState;
+  private statsService: GameStatsService;
+  private moveHistory: GameState[];
 
   constructor() {
     this.gameState = {
@@ -15,6 +18,8 @@ export class ChessGame {
       isInCheck: false,
       checkingPiece: undefined
     };
+    this.statsService = new GameStatsService();
+    this.moveHistory = [];
   }
 
   private initializeBoard(): (ChessPiece | null)[][] {
@@ -118,7 +123,20 @@ export class ChessGame {
     
     if (!validMove) return false;
 
+    // 保存当前状态到历史记录
+    this.moveHistory.push(this.deepCloneGameState());
+
     const from = this.gameState.selectedPiece.position;
+    const targetPiece = this.gameState.board[to.y][to.x];
+
+    // 记录移动
+    this.statsService.recordMove(
+      this.gameState.selectedPiece.type,
+      from,
+      to,
+      this.gameState.selectedPiece.player,
+      targetPiece?.type
+    );
 
     // 执行移动
     this.gameState.board[to.y][to.x] = this.gameState.selectedPiece;
@@ -136,6 +154,10 @@ export class ChessGame {
     
     // 检查游戏结束
     this.checkGameOver();
+
+    if (this.gameState.gameOver) {
+      this.statsService.endGame();
+    }
 
     return true;
   }
@@ -478,5 +500,50 @@ export class ChessGame {
       isInCheck: false,
       checkingPiece: undefined
     };
+    this.moveHistory = [];
+    this.statsService.reset();
+  }
+
+  undoMove(): boolean {
+    if (this.moveHistory.length === 0) return false;
+
+    // 恢复上一个状态
+    this.gameState = this.moveHistory.pop()!;
+    
+    // 撤销统计服务中的最后一步
+    this.statsService.undoLastMove();
+    
+    return true;
+  }
+
+  canUndo(): boolean {
+    return this.moveHistory.length > 0;
+  }
+
+  private deepCloneGameState(): GameState {
+    return {
+      board: this.gameState.board.map(row => 
+        row.map(piece => piece ? { ...piece } : null)
+      ),
+      currentPlayer: this.gameState.currentPlayer,
+      selectedPiece: this.gameState.selectedPiece ? { ...this.gameState.selectedPiece } : null,
+      validMoves: [...this.gameState.validMoves],
+      gameOver: this.gameState.gameOver,
+      winner: this.gameState.winner,
+      isInCheck: this.gameState.isInCheck,
+      checkingPiece: this.gameState.checkingPiece
+    };
+  }
+
+  getStats() {
+    return this.statsService.getStats();
+  }
+
+  getMoveHistory() {
+    return this.statsService.getMoveHistory();
+  }
+
+  getCurrentDuration() {
+    return this.statsService.getCurrentDuration();
   }
 }
