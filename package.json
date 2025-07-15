@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://liuyong.tz.github.io/test-k2",
+  "homepage": "https://vibe-showcase.github.io/chess-kimi-k4",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",

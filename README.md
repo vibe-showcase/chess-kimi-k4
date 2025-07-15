@@ -4,7 +4,7 @@
 
 ## 在线体验
 
-[点击这里在线体验](https://liuyong.tz.github.io/test-k2)
+[点击这里在线体验](https://vibe-showcase.github.io/chess-kimi-k4)
 
 ## 功能特点
 
